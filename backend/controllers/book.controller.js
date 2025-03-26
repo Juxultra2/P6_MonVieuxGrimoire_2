@@ -1,5 +1,6 @@
 const Book = require('../models/Book');
 const path = require('path');
+const fs = require('fs');
 const optimizeImage = require('../utils/optimizeImage');
 
 // Récupérer tous les livres
@@ -58,9 +59,6 @@ exports.createBook = async (req, res) => {
   }
 };
 
-
-const fs = require('fs');
-
 exports.modifyBook = async (req, res) => {
   try {
     const bookId = req.params.id;
@@ -77,7 +75,6 @@ exports.modifyBook = async (req, res) => {
 
     // Si une nouvelle image est fournie, optimise-la et supprime l’ancienne
     if (req.file) {
-      const optimizeImage = require('../utils/optimizeImage');
       const optimizedPath = await optimizeImage(req.file.path);
       imageUrl = `${req.protocol}://${req.get('host')}/images/${path.basename(optimizedPath)}`;
 
@@ -101,7 +98,26 @@ exports.modifyBook = async (req, res) => {
   }
 };
 
+exports.deleteBook = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) return res.status(404).json({ message: 'Livre non trouvé' });
 
-exports.deleteBook = (req, res) => {
-  res.status(200).json({ message: `Suppression du livre ${req.params.id}` });
+    // Vérifie que l'utilisateur est bien le créateur du livre
+    if (book.userId !== req.auth.userId) {
+      return res.status(403).json({ message: 'Non autorisé à supprimer ce livre' });
+    }
+
+    // Supprime l'image associée
+    const filename = book.imageUrl.split('/images/')[1];
+    fs.unlink(`images/${filename}`, async (err) => {
+      if (err) console.warn('⚠️ Image non supprimée :', err.message);
+
+      await Book.findByIdAndDelete(req.params.id);
+      res.status(200).json({ message: 'Livre supprimé avec succès' });
+    });
+  } catch (error) {
+    console.error('❌ Erreur suppression livre :', error.message);
+    res.status(500).json({ error: error.message });
+  }
 };
