@@ -40,14 +40,17 @@ exports.createBook = async (req, res) => {
     const imageUrl = `${req.protocol}://${req.get('host')}/images/${path.basename(optimizedImagePath)}`;
 
     // Création du livre
-    const book = new Book({
-      ...bookObject,
-      imageUrl,
-      averageRating: bookObject.rating || 0,
-      ratings: bookObject.rating
-        ? [{ userId: bookObject.userId, grade: bookObject.rating }]
-        : [],
-    });
+    const average =
+  bookObject.ratings && bookObject.ratings.length > 0
+    ? bookObject.ratings.reduce((acc, r) => acc + r.grade, 0) /
+      bookObject.ratings.length
+    : 0;
+
+const book = new Book({
+  ...bookObject,
+  imageUrl,
+  averageRating: average,
+});
 
     console.log('📚 book ready to save:', book);
 
@@ -119,5 +122,46 @@ exports.deleteBook = async (req, res) => {
   } catch (error) {
     console.error('❌ Erreur suppression livre :', error.message);
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.rateBook = async (req, res) => {
+  try {
+    const { userId, rating } = req.body;
+    const book = await Book.findById(req.params.id);
+
+    if (!book) return res.status(404).json({ message: 'Livre non trouvé' });
+
+    // Vérifie si l'utilisateur a déjà noté
+    const alreadyRated = book.ratings.find((r) => r.userId === userId);
+    if (alreadyRated) {
+      return res.status(400).json({ message: 'Vous avez déjà noté ce livre.' });
+    }
+
+    // Ajoute la note
+    book.ratings.push({ userId, grade: rating });
+
+    // Recalcule la moyenne
+    const total = book.ratings.reduce((sum, r) => sum + r.grade, 0);
+    book.averageRating = Math.round(total / book.ratings.length);
+
+    await book.save();
+    res.status(200).json(book);
+  } catch (error) {
+    console.error('❌ Erreur notation livre :', error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getBestRatedBooks = async (req, res) => {
+  try {
+    const bestBooks = await Book.find()
+      .sort({ averageRating: -1 }) // Tri décroissant
+      .limit(3); // Prend les 3 meilleurs
+
+    res.status(200).json(bestBooks);
+  } catch (error) {
+    console.error('❌ Erreur getBestRatedBooks :', error.message);
+    res.status(400).json({ error: error.message });
   }
 };
