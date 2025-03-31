@@ -1,3 +1,4 @@
+// controllers/book.controller.js
 const Book = require('../models/Book');
 const path = require('path');
 const fs = require('fs');
@@ -28,9 +29,6 @@ exports.getOneBook = async (req, res) => {
 exports.createBook = async (req, res) => {
   try {
 
-    console.log('📦 req.body:', req.body);
-    console.log('🖼️ req.file:', req.file);
-
     const bookObject = JSON.parse(req.body.book);
 
     // Optimise l'image reçue avec Sharp
@@ -52,7 +50,6 @@ const book = new Book({
   averageRating: average,
 });
 
-    console.log('📚 book ready to save:', book);
 
     await book.save();
     res.status(201).json(book);
