@@ -18,11 +18,11 @@ const optimizeImage = async (filePath) => {
   const optimizedPath = filePath.replace(/(\.\w+)$/, '_optimized$1');
 
   await sharp(filePath)
-    .resize({ width: 800 }) // ou autre taille si tu veux
+    .resize({ width: 800 })
     .jpeg({ quality: 80 })
     .toFile(optimizedPath);
 
-  // ESSAYE de supprimer le fichier, mais ignore l’erreur si ça plante
+  // Essaye de supprimer le fichier, mais ignore l’erreur si ça plante
   try {
     fs.unlinkSync(filePath);
   } catch (err) {

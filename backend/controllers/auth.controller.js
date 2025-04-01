@@ -17,10 +17,10 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
-    if (!user) return res.status(401).json({ message: 'Utilisateur non trouvé !' });
+    if (!user) return res.status(401).json({ message: 'Identifiants invalides' });
 
     const valid = await bcrypt.compare(req.body.password, user.password);
-    if (!valid) return res.status(401).json({ message: 'Mot de passe incorrect !' });
+    if (!valid) return res.status(401).json({ message: 'Identifiants invalides' });
 
     res.status(200).json({
       userId: user._id,

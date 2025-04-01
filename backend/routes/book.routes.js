@@ -11,7 +11,7 @@ router.get('/bestrating', bookCtrl.getBestRatedBooks);
 //  Routes dynamiques ensuite
 router.get('/', bookCtrl.getAllBooks);
 router.get('/:id', bookCtrl.getOneBook);
-router.post('/', multer, bookCtrl.createBook);
+router.post('/', auth, multer, bookCtrl.createBook);
 router.put('/:id', auth, multer, bookCtrl.modifyBook);
 router.delete('/:id', auth, bookCtrl.deleteBook);
 router.post('/:id/rating', auth, bookCtrl.rateBook);

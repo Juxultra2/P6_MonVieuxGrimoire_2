@@ -124,7 +124,14 @@ exports.deleteBook = async (req, res) => {
 
 exports.rateBook = async (req, res) => {
   try {
-    const { userId, rating } = req.body;
+    const userId = req.auth.userId;
+    const rating = parseInt(req.body.rating, 10);
+
+    // Vérifie que la note est bien entre 1 et 5
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'La note doit être comprise entre 1 et 5.' });
+    }
+
     const book = await Book.findById(req.params.id);
 
     if (!book) return res.status(404).json({ message: 'Livre non trouvé' });
